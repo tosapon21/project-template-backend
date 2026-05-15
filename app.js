@@ -1,4 +1,7 @@
 import 'dotenv/config';
+import fs from 'fs';
+import https from 'https';
+import path from 'path';
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { graphqlUploadExpress } from 'graphql-upload';
@@ -45,4 +48,22 @@ app.use(
     }))
 );
 
-app.listen(process.env.PORT || 8080);
+const port = process.env.PORT || 8080;
+const useHttps = isDevelopment && process.env.USE_HTTPS !== 'false';
+const sslKeyPath = path.resolve(process.cwd(), process.env.SSL_KEY_PATH || './ssl/localhost.key');
+const sslCertPath = path.resolve(process.cwd(), process.env.SSL_CERT_PATH || './ssl/localhost.crt');
+
+if (useHttps) {
+    try {
+        const key = fs.readFileSync(sslKeyPath);
+        const cert = fs.readFileSync(sslCertPath);
+        https.createServer({ key, cert }, app).listen(port, () => {
+            console.log(`Backend running on https://localhost:${port}`);
+        });
+    } catch (err) {
+        console.warn(`SSL setup failed (${err.message}). Starting HTTP server instead.`);
+        app.listen(port, () => console.log(`Backend running on http://localhost:${port}`));
+    }
+} else {
+    app.listen(port, () => console.log(`Backend running on http://localhost:${port}`));
+}
