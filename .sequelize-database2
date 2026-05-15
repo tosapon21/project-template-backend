@@ -1,7 +1,0 @@
-{
-  "options-path": ".sequelizerc",
-  "env": "database2",
-  "migrations-path": "server/migrations/database2",
-  "seeders-path": "server/seeders/database2",
-  "models-path": "server/models/database2"
-}
