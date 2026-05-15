@@ -1,0 +1,42 @@
+{
+  "name": "project-template-backend",
+  "version": "1.0.0",
+  "description": "Backend template with user/role/privilege management",
+  "main": "app.js",
+  "scripts": {
+    "start": "node -r @babel/register app.js",
+    "dev": "nodemon -r @babel/register app.js",
+    "db1:migrate": "sequelize --options-path .sequelize-database1 db:migrate",
+    "db1:migrate:undo": "sequelize --options-path .sequelize-database1 db:migrate:undo",
+    "db1:seed": "sequelize --options-path .sequelize-database1 db:seed:all",
+    "db2:migrate": "sequelize --options-path .sequelize-database2 db:migrate",
+    "db2:migrate:undo": "sequelize --options-path .sequelize-database2 db:migrate:undo"
+  },
+  "dependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/register": "^7.12.1",
+    "@graphql-tools/load-files": "^6.2.7",
+    "@graphql-tools/merge": "^6.2.7",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.17.1",
+    "express-graphql": "^0.11.0",
+    "express-rate-limit": "^6.7.0",
+    "graphql": "^15.3.0",
+    "graphql-upload": "^11.0.0",
+    "helmet": "^4.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.2.5",
+    "path": "^0.12.7",
+    "sequelize": "^6.3.5",
+    "validator": "^13.1.17"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.12.3",
+    "nodemon": "^2.0.6",
+    "sequelize-cli": "^6.6.5"
+  }
+}

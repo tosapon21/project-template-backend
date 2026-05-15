@@ -1,0 +1,103 @@
+# =============================================================================
+# ENVIRONMENT VARIABLES REFERENCE
+# =============================================================================
+# Copy this file to ".env" in the project root and fill in all values.
+# Never commit your actual .env file to version control.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# SERVER
+# -----------------------------------------------------------------------------
+
+# Runtime mode. Use "development" locally, "production" on server.
+# In production: GraphQL introspection is disabled, error stack traces are hidden.
+NODE_ENV=development
+
+# Port the Express server listens on.
+PORT=8080
+
+
+# -----------------------------------------------------------------------------
+# DATABASE 1 — Auth / Users (required)
+# This database holds: users, roles, privileges, user_roles, role_privileges, whitelist.
+# Run migrations before starting: npm run db1:migrate
+# Run seed for initial admin account: npm run db1:seed
+# -----------------------------------------------------------------------------
+
+DB1_HOST=localhost
+DB1_PORT=3306
+DB1_NAME=template_auth
+DB1_USER=your_db1_username
+DB1_PASSWORD=your_db1_password
+
+
+# -----------------------------------------------------------------------------
+# DATABASE 2 — Content (required, can be empty on first run)
+# This database is for your project-specific content models.
+# Add your models in server/models/database2/ and migrations in server/migrations/database2/
+# Run migrations: npm run db2:migrate
+# -----------------------------------------------------------------------------
+
+DB2_HOST=localhost
+DB2_PORT=3306
+DB2_NAME=template_content
+DB2_USER=your_db2_username
+DB2_PASSWORD=your_db2_password
+
+
+# -----------------------------------------------------------------------------
+# JWT SECRETS (required — must be changed before going to production)
+# Generate secure values with: openssl rand -hex 64
+# These secrets sign and verify all authentication tokens.
+# If leaked, attackers can forge tokens for any user — treat like passwords.
+# -----------------------------------------------------------------------------
+
+# Signs short-lived access tokens (used by frontend for API requests)
+ACCESS_TOKEN_SECRET=change_this_access_secret_in_production
+
+# Signs long-lived refresh tokens (used to obtain new access tokens)
+REFRESH_TOKEN_SECRET=change_this_refresh_secret_in_production
+
+# Signs one-time email verification tokens (used in future email verify flow)
+EMAIL_VERIFY_SECRET=change_this_email_verify_secret_in_production
+
+
+# -----------------------------------------------------------------------------
+# TOKEN DURATIONS (in seconds)
+# ACCESS_TOKEN_DURATION: how long an access token is valid before expiring.
+#   Short values (60s) reduce the window of exposure if a token is stolen.
+# REFRESH_TOKEN_DURATION: how long a refresh token is valid.
+#   After expiry the user must log in again.
+#   On every refresh, the old token is revoked and a new one is issued (rotation).
+# -----------------------------------------------------------------------------
+
+ACCESS_TOKEN_DURATION=60
+REFRESH_TOKEN_DURATION=1200
+
+
+# -----------------------------------------------------------------------------
+# SECURITY
+# BCRYPT_SALT_ROUNDS: cost factor for password hashing.
+#   12 is a good default. Increase to 13-14 on more powerful servers.
+#   Higher = more CPU per hash = slower brute force, but slower login.
+# FRONTEND_URL: the only origin allowed to make cross-origin requests (CORS).
+#   Set to your frontend domain in production (must include protocol and port if non-standard).
+# -----------------------------------------------------------------------------
+
+BCRYPT_SALT_ROUNDS=12
+FRONTEND_URL=http://localhost:4200
+
+
+# =============================================================================
+# QUICK START CHECKLIST
+# =============================================================================
+# 1. Copy this file: cp example_env .env
+# 2. Fill in DB1_* and DB2_* with your MySQL credentials
+# 3. Generate JWT secrets: openssl rand -hex 64   (run twice, one per secret)
+# 4. Set FRONTEND_URL to where your Angular app runs
+# 5. Run: npm install
+# 6. Run: npm run db1:migrate
+# 7. Run: npm run db1:seed          (creates admin user: admin / Admin@Template1)
+# 8. Run: npm run dev
+# =============================================================================
