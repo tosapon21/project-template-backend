@@ -11,8 +11,16 @@ export default (sequelize, DataTypes) => {
     });
 
     Role.associate = (models) => {
-        Role.belongsToMany(models.User, { through: models.UserRole, foreignKey: 'role_id' });
-        Role.belongsToMany(models.Privilege, { through: models.RolePrivilege, foreignKey: 'role_id' });
+        Role.belongsToMany(models.User, {
+            through: models.UserRole,
+            foreignKey: 'role_id',
+            otherKey: 'user_id'
+        });
+        Role.belongsToMany(models.Privilege, {
+            through: models.RolePrivilege,
+            foreignKey: 'role_id',
+            otherKey: 'privilege_id'
+        });
     };
 
     return Role;

@@ -12,8 +12,10 @@ export default async (req, res, next) => {
 
         if (authHeader) {
             const parts = authHeader.split(' ');
-            if (parts.length === 3 && parts[1] === 'refresh') {
-                token = parts[2];
+            const isRefreshRequest = req.body?.auth_type === 'refresh';
+
+            if ((parts.length === 3 && parts[1] === 'refresh') || (parts.length === 2 && parts[0] === 'Bearer' && isRefreshRequest)) {
+                token = parts[parts.length - 1];
                 tokenType = 'refresh';
             } else if (parts.length === 2 && parts[0] === 'Bearer') {
                 token = parts[1];

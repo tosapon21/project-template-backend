@@ -15,5 +15,10 @@ export default (sequelize, DataTypes) => {
         timestamps: false
     });
 
+    UserRole.associate = (models) => {
+        UserRole.belongsTo(models.User, { foreignKey: 'user_id' });
+        UserRole.belongsTo(models.Role, { foreignKey: 'role_id' });
+    };
+
     return UserRole;
 };

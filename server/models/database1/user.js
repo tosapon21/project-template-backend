@@ -24,6 +24,15 @@ export default (sequelize, DataTypes) => {
         profile_img_code: {
             type: DataTypes.STRING(255)
         },
+        first_name: {
+            type: DataTypes.STRING(100)
+        },
+        last_name: {
+            type: DataTypes.STRING(100)
+        },
+        nick_name: {
+            type: DataTypes.STRING(100)
+        },
         failed_login_attempts: {
             type: DataTypes.INTEGER,
             defaultValue: 0
@@ -38,7 +47,14 @@ export default (sequelize, DataTypes) => {
 
     User.associate = (models) => {
         User.hasMany(models.UserRole, { foreignKey: 'user_id' });
+        User.belongsToMany(models.Role, {
+            through: models.UserRole,
+            foreignKey: 'user_id',
+            otherKey: 'role_id'
+        });
         User.hasMany(models.Whitelist, { foreignKey: 'user_id' });
+        User.hasMany(models.EmailVerification, { foreignKey: 'user_id' });
+        User.hasMany(models.PasswordReset, { foreignKey: 'user_id' });
     };
 
     return User;

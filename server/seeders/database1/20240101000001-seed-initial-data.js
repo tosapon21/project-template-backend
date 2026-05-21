@@ -25,7 +25,7 @@ module.exports = {
             privileges.map(p => ({ role_id: adminRoleId, privilege_id: p.id })), {});
 
         // Admin user
-        const hashedPassword = bcrypt.hashSync('Admin@Template1', 12);
+        const hashedPassword = bcrypt.hashSync('admin1234', 12);
         await queryInterface.bulkInsert('users', [{
             user_name: 'admin',
             password: hashedPassword,

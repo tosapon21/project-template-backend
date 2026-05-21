@@ -1,4 +1,5 @@
 import validator from 'validator';
+import { Op } from 'sequelize';
 import db from '../../server/models/index.js';
 import Validate from '../../shared/validate.js';
 
@@ -15,12 +16,37 @@ export default {
 
         async getRoleList(obj, args, { req }) {
             await Validate.checkPrivilege(req, 'IS_ADMIN');
-            return Role.findAll();
+            const roles = await Role.findAll();
+            return {
+                role_count: roles.length,
+                role_list: roles
+            };
         },
 
         async getPrivilegeList(obj, args, { req }) {
             await Validate.checkPrivilege(req, 'IS_ADMIN');
             return Privilege.findAll();
+        },
+
+        async getPrivilege(obj, args, { req }) {
+            await Validate.checkPrivilege(req, 'IS_ADMIN');
+            const privilege = await Privilege.findByPk(args.id);
+            Validate.checkValidate(!privilege, 'PRIVILEGE_NOT_FOUND', 404);
+            return privilege;
+        },
+
+        async getUserRole(obj, args, { req }) {
+            await Validate.checkPrivilege(req, 'IS_ADMIN');
+
+            const user = await User.findByPk(args.id, {
+                include: [{
+                    model: UserRole,
+                    include: [{ model: Role }]
+                }]
+            });
+            Validate.checkValidate(!user, 'USER_NOT_FOUND', 404);
+
+            return user.UserRoles?.map(userRole => userRole.Role).filter(Boolean) || [];
         },
 
         async getUserRoleList(obj, args, { req }) {
@@ -38,6 +64,20 @@ export default {
                 email: u.email,
                 roles: u.UserRoles?.map(ur => ur.Role).filter(Boolean) || []
             }));
+        },
+
+        async getRolePrivilege(obj, args, { req }) {
+            await Validate.checkPrivilege(req, 'IS_ADMIN');
+
+            const role = await Role.findByPk(args.id, {
+                include: [{
+                    model: Privilege,
+                    through: { attributes: [] }
+                }]
+            });
+            Validate.checkValidate(!role, 'ROLE_NOT_FOUND', 404);
+
+            return role.Privileges || [];
         },
 
         async getRolePrivilegeList(obj, args, { req }) {
@@ -102,12 +142,42 @@ export default {
             const existing = await Privilege.findOne({ where: { privilege_code: privilege_code.trim().toUpperCase() } });
             Validate.checkValidate(!!existing, 'PRIVILEGE_EXISTS', 409);
 
-            await Privilege.create({
+            return Privilege.create({
                 type: type.trim(),
                 privilege_code: privilege_code.trim().toUpperCase(),
                 description: description ? Validate.sanitizeString(description) : null
             });
-            return true;
+        },
+
+        async updatePrivilege(obj, args, { req }) {
+            await Validate.checkPrivilege(req, 'IS_ADMIN');
+            const { type, privilege_code, description } = args.privilege_input;
+
+            const privilege = await Privilege.findByPk(args.privilege_id);
+            Validate.checkValidate(!privilege, 'PRIVILEGE_NOT_FOUND', 404);
+
+            Validate.checkValidate(!type || validator.isEmpty(type.trim()), 'INVALID_TYPE', 400);
+            Validate.checkValidate(!privilege_code || validator.isEmpty(privilege_code.trim()), 'INVALID_CODE', 400);
+            Validate.checkValidate(!validator.isLength(type.trim(), { min: 1, max: 50 }), 'TYPE_TOO_LONG', 400);
+            Validate.checkValidate(!validator.isLength(privilege_code.trim(), { min: 1, max: 100 }), 'CODE_TOO_LONG', 400);
+            Validate.checkValidate(!validator.isAlphanumeric(privilege_code.trim().replace(/_/g, '')), 'CODE_INVALID_FORMAT', 400);
+
+            const normalizedCode = privilege_code.trim().toUpperCase();
+            const existing = await Privilege.findOne({
+                where: {
+                    privilege_code: normalizedCode,
+                    id: { [Op.ne]: args.privilege_id }
+                }
+            });
+            Validate.checkValidate(!!existing, 'PRIVILEGE_EXISTS', 409);
+
+            await privilege.update({
+                type: type.trim(),
+                privilege_code: normalizedCode,
+                description: description ? Validate.sanitizeString(description) : null
+            });
+
+            return privilege;
         },
 
         async deletePrivilege(obj, args, { req }) {
@@ -191,6 +261,7 @@ export default {
 
             const user = await User.findByPk(args.user_id);
             Validate.checkValidate(!user, 'USER_NOT_FOUND', 404);
+            Validate.checkValidate(user.user_name === 'admin' && args.status === 0, 'ADMIN_USER_CANNOT_BE_DISABLED', 400);
 
             await user.update({ status: args.status });
 
