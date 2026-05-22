@@ -4,6 +4,10 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.STRING(100),
             allowNull: false,
             unique: true
+        },
+        description: {
+            type: DataTypes.STRING(255),
+            allowNull: true
         }
     }, {
         tableName: 'roles',

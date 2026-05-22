@@ -2,6 +2,7 @@ export default `
     type RoleData {
         id: Int
         role_name: String
+        description: String
     }
 
     type RoleListData {
@@ -31,6 +32,7 @@ export default `
 
     input roleInput {
         role_name: String!
+        description: String
     }
 
     input privilegeInput {
@@ -51,6 +53,7 @@ export default `
     }
 
     type Mutation {
+        createRole(role_input: roleInput!): Boolean
         addRole(role_input: roleInput!): Boolean
         deleteRole(role_id: Int!): Boolean
         addPrivilege(privilege_input: privilegeInput!): PrivilegeData

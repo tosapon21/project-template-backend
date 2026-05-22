@@ -5,8 +5,8 @@ module.exports = {
     up: async (queryInterface) => {
         // Roles
         await queryInterface.bulkInsert('roles', [
-            { role_name: 'Admin' },
-            { role_name: 'User' }
+            { role_name: 'Admin', description: 'Full access to all features and settings' },
+            { role_name: 'User', description: 'Standard application access' }
         ], {});
 
         // Privileges

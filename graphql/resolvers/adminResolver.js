@@ -5,6 +5,24 @@ import Validate from '../../shared/validate.js';
 
 const { User, Role, Privilege, UserRole, RolePrivilege, Whitelist } = db.database1;
 
+async function createRole(roleInput) {
+    const { role_name, description } = roleInput;
+    const sanitizedDescription = description ? Validate.sanitizeString(description) : null;
+
+    Validate.checkValidate(!role_name || validator.isEmpty(role_name.trim()), 'INVALID_ROLE_NAME', 400);
+    Validate.checkValidate(!validator.isLength(role_name.trim(), { min: 2, max: 100 }), 'ROLE_NAME_INVALID_LENGTH', 400);
+    Validate.checkValidate(description && !validator.isLength(description.trim(), { max: 255 }), 'ROLE_DESCRIPTION_TOO_LONG', 400);
+
+    const existing = await Role.findOne({ where: { role_name: role_name.trim() } });
+    Validate.checkValidate(!!existing, 'ROLE_EXISTS', 409);
+
+    await Role.create({
+        role_name: role_name.trim(),
+        description: sanitizedDescription || null
+    });
+    return true;
+}
+
 export default {
     Query: {
         async getUserList(obj, args, { req }) {
@@ -97,18 +115,14 @@ export default {
     },
 
     Mutation: {
+        async createRole(obj, args, { req }) {
+            await Validate.checkPrivilege(req, 'IS_ADMIN');
+            return createRole(args.role_input);
+        },
+
         async addRole(obj, args, { req }) {
             await Validate.checkPrivilege(req, 'IS_ADMIN');
-            const { role_name } = args.role_input;
-
-            Validate.checkValidate(!role_name || validator.isEmpty(role_name.trim()), 'INVALID_ROLE_NAME', 400);
-            Validate.checkValidate(!validator.isLength(role_name.trim(), { min: 2, max: 100 }), 'ROLE_NAME_INVALID_LENGTH', 400);
-
-            const existing = await Role.findOne({ where: { role_name: role_name.trim() } });
-            Validate.checkValidate(!!existing, 'ROLE_EXISTS', 409);
-
-            await Role.create({ role_name: role_name.trim() });
-            return true;
+            return createRole(args.role_input);
         },
 
         async deleteRole(obj, args, { req }) {
