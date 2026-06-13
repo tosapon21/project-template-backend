@@ -14,6 +14,10 @@ export default (sequelize, DataTypes) => {
             allowNull: false,
             unique: true
         },
+        bp_portal_user_id: {
+            type: DataTypes.STRING(100),
+            unique: true
+        },
         status: {
             type: DataTypes.TINYINT,
             defaultValue: 0

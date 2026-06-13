@@ -134,6 +134,113 @@ const generateTokens = async (user, transaction) => {
     return { accessToken, refreshToken, accessDuration };
 };
 
+const getRequiredEnv = (name) => {
+    const value = process.env[name];
+    Validate.checkValidate(!value, `${name}_NOT_CONFIGURED`, 500);
+    return value;
+};
+
+const postBPPortal = async (path, body) => {
+    const bpPortalUrl = getRequiredEnv('BP_PORTAL_URL').replace(/\/$/, '');
+    const response = await fetch(`${bpPortalUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    const responseText = await response.text();
+    let payload = {};
+
+    if (responseText) {
+        try {
+            payload = JSON.parse(responseText);
+        } catch {
+            payload = { message: responseText.slice(0, 200) };
+        }
+    }
+
+    if (!response.ok) {
+        const err = new Error(payload.message || `BP_PORTAL_REQUEST_FAILED:${response.status}`);
+        err.status = response.status;
+        throw err;
+    }
+
+    return payload;
+};
+
+const exchangeBPPortalCode = async (code) => {
+    const payload = await postBPPortal('/oauth/exchange', {
+        client_id: getRequiredEnv('BP_CLIENT_ID'),
+        client_secret: getRequiredEnv('BP_CLIENT_SECRET'),
+        code
+    });
+
+    Validate.checkValidate(!payload.access_token, 'BP_PORTAL_TOKEN_MISSING', 401);
+    return payload.access_token;
+};
+
+const verifyBPPortalToken = async (accessToken) => {
+    const payload = await postBPPortal('/api/v1/verify-token', {
+        client_id: getRequiredEnv('BP_CLIENT_ID'),
+        client_secret: getRequiredEnv('BP_CLIENT_SECRET'),
+        access_token: accessToken
+    });
+
+    Validate.checkValidate(!payload.data, 'BP_PORTAL_USER_MISSING', 401);
+    return payload.data;
+};
+
+const normalizeBPUserName = (bpUser) => {
+    const fallback = bpUser.email ? bpUser.email.split('@')[0] : `bp_${bpUser.user_id || bpUser.employee?.id || Date.now()}`;
+    return (bpUser.user_name || fallback)
+        .toString()
+        .trim()
+        .replace(/[^a-zA-Z0-9_.-]/g, '_')
+        .slice(0, 80);
+};
+
+const getOrCreateBPPortalUser = async (bpUser, transaction) => {
+    const userName = normalizeBPUserName(bpUser);
+    const email = (bpUser.email || `${userName}@bp-portal.local`).toLowerCase();
+
+    let user = await User.findOne({ where: { email }, transaction });
+
+    if (!user && !bpUser.email) {
+        user = await User.findOne({ where: { user_name: userName }, transaction });
+    }
+
+    if (!user) {
+        const userNameExists = await User.findOne({ where: { user_name: userName }, transaction });
+        const safeUserName = userNameExists ? `${userName}_bp_${bpUser.user_id}`.slice(0, 100) : userName;
+        const randomPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
+
+        user = await User.create({
+            user_name: safeUserName,
+            password: randomPassword,
+            email,
+            status: 1,
+            first_name: bpUser.first_name || bpUser.employee?.first_name || null,
+            last_name: bpUser.last_name || bpUser.employee?.last_name || null,
+            nick_name: bpUser.nick_name || null,
+            profile_img_code: bpUser.profile_img_code || null
+        }, { transaction });
+    } else {
+        Validate.checkValidate(user.status !== 1, 'ACCOUNT_DISABLED', 403);
+
+        const profileUpdate = {
+            first_name: bpUser.first_name || bpUser.employee?.first_name || user.first_name,
+            last_name: bpUser.last_name || bpUser.employee?.last_name || user.last_name,
+            nick_name: bpUser.nick_name || user.nick_name,
+            profile_img_code: bpUser.profile_img_code || user.profile_img_code,
+            last_login: new Date()
+        };
+
+        await user.update(profileUpdate, { transaction });
+    }
+
+    return user;
+};
+
 export default {
     Upload: GraphQLUpload,
 
@@ -319,6 +426,31 @@ export default {
             await Mail.sendVerificationEmail(user.email, verifyToken);
 
             return true;
+        },
+
+        async loginByBPPortal(obj, args) {
+            Validate.checkValidate(!args.code || validator.isEmpty(args.code), 'INVALID_CODE', 400);
+
+            const bpAccessToken = await exchangeBPPortalCode(args.code);
+            const bpUser = await verifyBPPortalToken(bpAccessToken);
+
+            const transaction = await db.sequelize1.transaction();
+            try {
+                const user = await getOrCreateBPPortalUser(bpUser, transaction);
+                const { refreshToken } = await generateTokens(user, transaction);
+
+                await user.update({
+                    last_login: new Date(),
+                    failed_login_attempts: 0,
+                    locked_until: null
+                }, { transaction });
+
+                await transaction.commit();
+                return refreshToken;
+            } catch (err) {
+                await transaction.rollback();
+                throw err;
+            }
         },
 
         async verifyEmail(obj, args) {

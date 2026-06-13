@@ -88,6 +88,26 @@ REFRESH_TOKEN_DURATION=1200
 BCRYPT_SALT_ROUNDS=12
 FRONTEND_URL=http://localhost:4200
 
+
+# -----------------------------------------------------------------------------
+# BP PORTAL OAUTH
+# -----------------------------------------------------------------------------
+
+# Backend API URL for BP Portal. Used by this backend to exchange OAuth codes and
+# verify BP Portal access tokens. Never expose BP_CLIENT_SECRET in the frontend.
+BP_PORTAL_URL=http://your-bp-portal-backend:8080
+BP_CLIENT_ID=your_bp_portal_client_id
+BP_CLIENT_SECRET=your_bp_portal_client_secret
+
+# Active SSO launch from BP Portal.
+BP_PORTAL_BASE_URL=http://your-bp-portal-backend:8080
+BP_PORTAL_CLIENT_ID=your_bp_portal_client_id
+BP_PORTAL_CLIENT_SECRET=your_bp_portal_client_secret
+BP_PORTAL_SSO_CALLBACK_PATH=/sso/callback
+BP_PORTAL_SSO_SUCCESS_REDIRECT=/home
+BP_PORTAL_SSO_FAILURE_REDIRECT=/login?sso_error=1
+BP_PORTAL_SSO_DEBUG=false
+
 # =============================================================================
 # QUICK START CHECKLIST
 # =============================================================================

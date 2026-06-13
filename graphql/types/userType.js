@@ -56,6 +56,7 @@ export default `
 
     type Mutation {
         signUp(suinput: signupInput!): Boolean
+        loginByBPPortal(code: String!): String
         verifyEmail(key: String!): Boolean
         requestPasswordReset(email: String!): Boolean
         resetPassword(key: String!, new_password: String!): Boolean
