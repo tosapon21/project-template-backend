@@ -1,0 +1,8 @@
+const path = require('path');
+
+module.exports = {
+  config: path.resolve(__dirname, 'server/config/config-cli-database2.js'),
+  'models-path': path.resolve(__dirname, 'server/models/database2'),
+  'migrations-path': path.resolve(__dirname, 'server/migrations/database2'),
+  'seeders-path': path.resolve(__dirname, 'server/seeders/database2')
+};

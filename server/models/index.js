@@ -9,6 +9,8 @@ import RolePrivilege from './database1/rolePrivilege.js';
 import Whitelist from './database1/whitelist.js';
 import EmailVerification from './database1/emailVerification.js';
 import PasswordReset from './database1/passwordReset.js';
+import Language from './database1/language.js';
+import WebText from './database1/webText.js';
 
 const sequelize1 = new Sequelize(
     config.database1.database,
@@ -44,6 +46,8 @@ const db1Models = {
     Whitelist: Whitelist(sequelize1, Sequelize),
     EmailVerification: EmailVerification(sequelize1, Sequelize),
     PasswordReset: PasswordReset(sequelize1, Sequelize),
+    Language: Language(sequelize1, Sequelize),
+    WebText: WebText(sequelize1, Sequelize),
 };
 
 // Run associations

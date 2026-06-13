@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const dbLogging = process.env.DB_LOGGING === 'true' ? console.log : false;
+
 module.exports = {
   development: {
     username: process.env.DB1_USER || 'root',
@@ -8,7 +10,7 @@ module.exports = {
     host: process.env.DB1_HOST || '127.0.0.1',
     port: process.env.DB1_PORT || 3306,
     dialect: 'mysql',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false
+    logging: dbLogging
   },
   test: {
     username: process.env.DB1_USER || 'root',
